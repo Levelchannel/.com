@@ -4,40 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Donate - Level Channel</title>
-
-    <!-- Favicon -->
     <link rel="icon" type="image/png" href="icon.png">
-
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Mitr:wght@200;300;400;500;600;700&display=swap');
-
         body {
             font-family: 'Mitr', sans-serif;
         }
-
-        /* ป้องกันการเลือกข้อความ */
         * {
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
         }
-
-        /* ป้องกันการลากรูป */
         img {
             -webkit-user-drag: none;
             user-drag: none;
             pointer-events: none;
         }
-
+        .downloadable {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        .card-top {
+            position: relative;
+            z-index: 10;
+        }
         html, body {
             height: 100%;
             margin: 0;
             overflow: hidden;
         }
-
-        /* Animated Gradient Background */
         body::before {
             content: "";
             position: fixed;
@@ -50,21 +47,19 @@
             animation: gradientBG 15s ease infinite;
             z-index: -1;
         }
-
         @keyframes gradientBG {
             0% { background-position: 0% 50%; }
             50% { background-position: 100% 50%; }
             100% { background-position: 0% 50%; }
         }
-
-        /* Optional: Floating particles */
         .particle {
             position: absolute;
             border-radius: 50%;
             background: rgba(255,255,255,0.3);
             animation: float 10s linear infinite;
+            pointer-events: none;
+            z-index: 0;
         }
-
         @keyframes float {
             0% { transform: translateY(0) translateX(0); opacity: 0; }
             50% { opacity: 1; }
@@ -73,30 +68,22 @@
     </style>
 </head>
 <body class="flex items-center justify-center">
-
-    <!-- Card Container -->
-    <div class="bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-10 max-w-md text-center transform transition duration-500 hover:scale-105 hover:shadow-3xl">
-
+    <div class="card-top bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl p-10 max-w-md text-center transform transition duration-500 hover:scale-105 hover:shadow-3xl">
         <h2 class="text-5xl font-extrabold mb-4 text-red-600 animate-pulse">
             💖 สนับสนุน / Donate
         </h2>
-
         <p class="text-gray-700 mb-8 text-lg leading-relaxed">
             ถ้าคุณชอบผลงานของผม และอยากสนับสนุน<br>
             สามารถสแกน QR Code ด้านล่างได้เลย 🙏
         </p>
-
         <div class="relative group">
-            <img src="Donet.png" alt="Donate QR Code" class="mx-auto w-64 h-64 rounded-3xl shadow-xl transition-transform duration-500 group-hover:scale-110"/>
-            <div class="absolute inset-0 rounded-3xl bg-pink-400/30 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <img id="donateQR" src="Donet.png" alt="Donate QR Code" class="mx-auto w-64 h-64 rounded-3xl shadow-xl transition-transform duration-500 group-hover:scale-110 downloadable" title="คลิกเพื่อดาวน์โหลด QR Code" />
+            <div class="absolute inset-0 rounded-3xl bg-pink-400/30 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
         </div>
-
         <p class="mt-6 text-red-500 font-semibold animate-bounce">
             ขอบคุณมากนะครับ! 🙏
         </p>
     </div>
-
-    <!-- Floating Particles -->
     <script>
         for(let i=0; i<30; i++){
             const particle = document.createElement('div');
@@ -107,11 +94,7 @@
             particle.style.animationDuration = (5 + Math.random() * 10) + 's';
             document.body.appendChild(particle);
         }
-
-        // ป้องกันคลิกขวา
         document.addEventListener('contextmenu', event => event.preventDefault());
-
-        // ป้องกัน Ctrl+C, Ctrl+S, Ctrl+U, Ctrl+A, Ctrl+P และ F12
         document.addEventListener('keydown', function(e) {
             if (e.ctrlKey && ( e.key === 'c' || e.key === 's' || e.key === 'u' || e.key === 'a' || e.key === 'p' )) {
                 e.preventDefault();
@@ -120,6 +103,39 @@
                 e.preventDefault();
             }
         });
+        (function() {
+            const img = document.getElementById('donateQR');
+            if (!img) return;
+            img.addEventListener('click', async function () {
+                const src = img.src;
+                const filename = (src ? src.split('/').pop().split('?')[0] : '') || 'donate.png';
+                try {
+                    const response = await fetch(src, { mode: 'cors' });
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                    return;
+                } catch (err) {
+                }
+                try {
+                    const a = document.createElement('a');
+                    a.href = src;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } catch (err2) {
+                    window.open(src, '_blank', 'noopener');
+                }
+            });
+        })();
     </script>
 </body>
 </html>
